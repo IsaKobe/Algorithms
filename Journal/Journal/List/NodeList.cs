@@ -7,13 +7,13 @@ using System.Xml.Linq;
 
 namespace Journal.List
 {
-    internal class NodeList<T>
+    public class NodeList<T>
     {
         public Node<T> head;
         public Node<T> tail;
         public Node<T> currentNode;
 
-        public int count = new();
+        public int count = 0;
 
         public override string ToString()
         {
@@ -32,6 +32,8 @@ namespace Journal.List
             return builder.ToString();
         }
 
+        #region Public
+        #region Add
         public void AddAfter(Node<T> node)
         {
             if(currentNode == null)
@@ -80,19 +82,60 @@ namespace Journal.List
                 AddA(tail, node);
             }
         }
+        #endregion
 
-        void Init(Node<T> node)
+        #region Removal
+        public void Remove()
         {
-            head = node;
-            currentNode = node;
-            tail = node;
-
-            node.next = node;
-            node.prev = node;
-            count++;
+            Remove(currentNode);
         }
 
+        public void RemoveFirst()
+        {
+            Remove(head);
+        }
 
+        public void RemoveLast()
+        {
+            Remove(tail);
+        }
+        #endregion
+
+        #region Moving
+        public void Next()
+        {
+            if (currentNode != null)
+                currentNode = currentNode.next;
+            else
+            {
+                Console.WriteLine("No nodes!");
+            }
+        }
+
+        public void Previous()
+        {
+            if (currentNode != null)
+                currentNode = currentNode.prev;
+            else
+            {
+                Console.WriteLine("No nodes!");
+            }
+        }
+
+        public void Head()
+        {
+            currentNode = head;
+        }
+
+        public void Tail()
+        {
+            currentNode = tail;
+        }
+        #endregion
+        #endregion
+
+        #region Private
+        #region Adding
         void AddA(Node<T> origin, Node<T> node)
         {
             node.next = origin.next;
@@ -116,12 +159,19 @@ namespace Journal.List
             currentNode = node;
             count++;
         }
+        #endregion
 
-
-        public void Remove()
+        void Init(Node<T> node)
         {
-            Remove(currentNode);
+            head = node;
+            currentNode = node;
+            tail = node;
+
+            node.next = node;
+            node.prev = node;
+            count++;
         }
+
 
         void Remove(Node<T> node)
         {
@@ -164,45 +214,6 @@ namespace Journal.List
                 Console.WriteLine("Cannot delete null");
             }
         }
-
-        public void RemoveFirst()
-        {
-            Remove(head);
-        }
-
-        public void RemoveLast()
-        {
-            Remove(tail);
-        }
-
-        public void Next()
-        {
-            if(currentNode != null)
-                currentNode = currentNode.next;
-            else
-            {
-                Console.WriteLine("No nodes!");
-            }
-        }
-
-        public void Previous()
-        {
-            if (currentNode != null)
-                currentNode = currentNode.prev;
-            else
-            {
-                Console.WriteLine("No nodes!");
-            }
-        }
-
-        public void Head()
-        {
-            currentNode = head;
-        }
-
-        public void Tail()
-        {
-            currentNode = tail;
-        }
+        #endregion
     }
 }

