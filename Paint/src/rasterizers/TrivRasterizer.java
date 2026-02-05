@@ -1,7 +1,8 @@
 package rasterizers;
-import models.DotLine;
-import models.Line;
+import models.Lines.DotLine;
+import models.Lines.Line;
 import rasters.Raster;
+import models.Complex.MyPolygon;
 
 import java.awt.*;
 
@@ -32,7 +33,7 @@ public class TrivRasterizer implements Rasterizer {
         int step = 1;
         boolean draw = false;
 
-        if(line instanceof DotLine dot)
+        if(line instanceof DotLine dot && dot.getPixelSpacing() > 0)
         {
             step = dot.getPixelSpacing();
             draw = true;
@@ -92,5 +93,13 @@ public class TrivRasterizer implements Rasterizer {
 
             }
         }
+    }
+
+    public void rasterize(MyPolygon polygon) {
+        for (int i = 1; i < polygon.points.size(); i++) {
+            rasterize(new DotLine(polygon.points.get(i-1), polygon.points.get(i), polygon.color, polygon.space));
+        }
+        if(polygon.finished)
+            rasterize(new DotLine(polygon.points.getLast(), polygon.points.getFirst(), polygon.color, polygon.space));
     }
 }

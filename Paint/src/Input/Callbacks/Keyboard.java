@@ -2,14 +2,13 @@ package Input.Callbacks;
 
 import Input.Input;
 
-import java.awt.*;
+import javax.swing.*;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 
-public class Keyboard extends Callbacks {
+public class Keyboard {
 
-    public Keyboard(Input input) {
-        super(input);
+    public Keyboard(Input input, JPanel panel) {
         KeyAdapter keyAdapter = new KeyAdapter() {
             @Override
             public void keyPressed(KeyEvent e) {
@@ -23,14 +22,10 @@ public class Keyboard extends Callbacks {
 
             @Override
             public void keyTyped(KeyEvent e) {
-                if(e.getKeyChar() == 'c') {
-                    input.clear(Color.black.getRGB(),true);
-                }
-                if(e.getKeyChar() == 'p') {
-
-                }
+                input.invokeAction(e.getKeyChar());
             }
+
         };
-        input.panel.addKeyListener(keyAdapter);
+        panel.addKeyListener(keyAdapter);
     }
 }

@@ -1,12 +1,14 @@
-package models;
+package models.Lines;
+
+import models.Point;
 
 import java.awt.*;
 
 public class Line {
-    Point a,  b;
+    models.Point a,  b;
     Color color;
 
-    public Line(Point a, Point b, Color color) {
+    public Line(models.Point a, models.Point b, Color color) {
         this.a = a;
         this.b = b;
         this.color = color;
@@ -16,7 +18,7 @@ public class Line {
         return color;
     }
 
-    public Point getB() {
+    public models.Point getB() {
         return b;
     }
 

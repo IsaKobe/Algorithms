@@ -2,91 +2,133 @@ package Input;
 
 import Input.Callbacks.Keyboard;
 import Input.Callbacks.Mouse;
-import models.DotLine;
-import models.Line;
-import models.MyCanvas;
+import models.Complex.MyPolygon;
 import models.Point;
-import rasterizers.TrivRasterizer;
 import rasters.Raster;
 
 import javax.swing.*;
-import java.awt.*;
 import java.awt.event.*;
 
 public class Input {
+    LineActions actions;
 
-    public final JPanel panel;
-    public final Raster raster;
+    Point a;
+    Point b;
 
-    public final MyCanvas canvas;
-    public final TrivRasterizer trivRasterizer;
+    MyPolygon polygon;
 
-    public Point a;
-    public Point b;
+    boolean makePolygon = false;
 
-    boolean showPreview = true;
-    boolean makeDotted = false;
-    boolean snapGrid = false;
-    public int spacing = 5;
+    public void release(MouseEvent e) {
+        if(makePolygon) {
+           return;
+        }
+        b.setX(e.getX());
+        b.setY(e.getY());
+        actions.addLine(a,b);
+        a.reset();
+        b.reset();
+    }
+
+    public void UpdateB(MouseEvent e, boolean isDrag) {
+        if(makePolygon) {
+            b =  new Point(e);
+            if(polygon != null && !polygon.points.isEmpty())
+                actions.drawTempLine(a, b);
+        }
+        else if(isDrag) {
+            b =  new Point(e);
+            actions.drawTempLine(a, b);
+        }
+    }
+
+    public void press(MouseEvent e) {
+        if(makePolygon) {
+            return;
+        }
+        a.setX(e.getX());
+        a.setY(e.getY());
+        b.copy(a);
+    }
+
+
+    public void click(MouseEvent e) {
+        if(makePolygon) {
+            if(polygon == null){
+                a = new Point(e);
+                polygon = new MyPolygon(a.clone());
+                actions.tempPolygon(polygon);
+            }
+            else{
+                actions.addPolygonPoint(polygon, a, new Point(e));
+            }
+        }
+    }
+
+
+    public void changeSpacing(int change) {
+        int space = Math.clamp(actions.spacing + change, 2, 15);
+        actions.spacing = space;
+        actions.drawTempLine(a, b);
+    }
 
 
     public Input(JPanel panel, Raster raster)
     {
-        this.canvas = new MyCanvas(raster, panel);
-        this.trivRasterizer = new TrivRasterizer(raster, Color.yellow);
-        this.panel = panel;
-        this.raster = raster;
-
-        new Mouse(this);
-        new Keyboard(this);
+        a = new Point(0,0);
+        b = new Point(0,0);
+        new Mouse(this, panel);
+        new Keyboard(this, panel);
+        actions = new LineActions(panel, raster);
     }
 
-    public void clear(int color, boolean doRepaint) {
-        raster.setClearColor(color);
-        raster.clear();
-        if(doRepaint){
-            panel.repaint();
-            canvas.clear();
+    public void invokeAction(int keyChar) {
+
+        switch (keyChar) {
+            case 'c':
+                actions.clear();
+                polygon = null;
+                break;
+            case 'p':
+                a.reset();
+                b.reset();
+                if(makePolygon) {
+                    polygon = null;
+                    actions.tempPolygon(polygon);
+                    actions.repaint();
+                }
+                makePolygon = !makePolygon;
+
+                break;
+            case KeyEvent.VK_SPACE:
+                if(polygon != null && polygon.points.size() > 2)
+                {
+                    actions.finishPolygon(polygon);
+                    polygon = null;
+                    a.reset();
+                    b.reset();
+                }
+                break;
+            case 'd':
+                actions.makeDotted = !actions.makeDotted;
+                if(polygon != null)
+                    polygon.space = actions.makeDotted ? actions.spacing : 0;
+                actions.repaint();
+
+                actions.drawTempLine(a, b);
+                break;
         }
     }
 
     public void changeDrawType(int key, boolean pressed) {
         switch (key) {
-            case KeyEvent.VK_CONTROL:
-                makeDotted = pressed;
-                break;
             case KeyEvent.VK_SHIFT:
-                snapGrid = pressed;
+                actions.snapGrid = pressed;
                 break;
             default:
                 return;
         }
-        recreateLine();
+        actions.drawTempLine(a, b);
     }
 
-    public void recreateLine(){
-        if(showPreview) {
-            clear(Color.black.getRGB(),false);
-
-            Line line = createLine();
-            trivRasterizer.rasterize(line);
-            canvas.draw();
-        }
-    }
-
-    public Line createLine() {
-        Line line;
-        Point x = new Point(b.getX(), b.getY());
-        if(snapGrid) {
-            Helpers.SnapPoints(x, a, b);
-        }
-
-        if(makeDotted){
-            line = new DotLine(a, x, Color.red, spacing);
-        }
-        else{
-            line = new Line(a, x, Color.red);
-        }
-        return line;
-    }
 }
