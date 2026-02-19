@@ -82,6 +82,8 @@ public class LineActions
     }
 
     void drawTempLine(Point a, Point b){
+        if(a.getX() == -1 && a.getY() == -1)
+            return;
         clear(Color.black.getRGB(), false);
 
         Line line = createLine(a, b.clone());
@@ -124,10 +126,21 @@ public class LineActions
     }
 
     public void finishPolygon(MyPolygon polygon) {
-        canvas.tempPolygon = null;
-        canvas.polygons.add(polygon);
-        polygon.finished = true;
-        polygon.space = makeDotted ? spacing : 0;
+        canvas.addPolygon(polygon, makeDotted ? spacing : 0);
+        repaint();
+    }
+
+    public Point tryTakeVertex(Point point) {
+        Point p = canvas.GetClosestPoint(point);
+        if(p != null)
+            System.out.println("Trying to take vertex: " + p.getX() + ", " + p.getY());
+        else
+            System.out.println("No near vertex");
+        return p;
+    }
+
+    public void moveVertex(Point point, Point newVal){
+        canvas.moveVertex(point, newVal);
         repaint();
     }
 }

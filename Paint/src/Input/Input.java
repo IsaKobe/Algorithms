@@ -8,6 +8,11 @@ import rasters.Raster;
 
 import javax.swing.*;
 import java.awt.event.*;
+enum InputMode{
+    Line,
+    Poly,
+    Vertex
+}
 
 public class Input {
     LineActions actions;
@@ -15,12 +20,14 @@ public class Input {
     Point a;
     Point b;
 
+    Point temp;
+
     MyPolygon polygon;
 
-    boolean makePolygon = false;
+    InputMode mode = InputMode.Line;
 
     public void release(MouseEvent e) {
-        if(makePolygon) {
+        if(mode != InputMode.Line || a.getX() == -1 && a.getY() == -1) {
            return;
         }
         b.setX(e.getX());
@@ -28,32 +35,44 @@ public class Input {
         actions.addLine(a,b);
         a.reset();
         b.reset();
+        temp = null;
     }
 
     public void UpdateB(MouseEvent e, boolean isDrag) {
-        if(makePolygon) {
-            b =  new Point(e);
+        if(mode == InputMode.Poly) {
+            b.getFromEv(e);
             if(polygon != null && !polygon.points.isEmpty())
                 actions.drawTempLine(a, b);
         }
         else if(isDrag) {
-            b =  new Point(e);
-            actions.drawTempLine(a, b);
+            if(mode == InputMode.Line) {
+                b.getFromEv(e);
+                actions.drawTempLine(a, b);
+            }
+            else if (temp != null) {
+                actions.moveVertex(temp, new Point(e));
+            }
         }
     }
 
+    /// Mouse down
     public void press(MouseEvent e) {
-        if(makePolygon) {
-            return;
+        switch (mode) {
+            case Poly:
+                return;
+            case Line:
+                a.getFromEv(e);
+                b.copy(a);
+                break;
+            case Vertex:
+                temp = actions.tryTakeVertex(new Point(e));
+                break;
         }
-        a.setX(e.getX());
-        a.setY(e.getY());
-        b.copy(a);
     }
 
 
     public void click(MouseEvent e) {
-        if(makePolygon) {
+        if(mode == InputMode.Poly) {
             if(polygon == null){
                 a = new Point(e);
                 polygon = new MyPolygon(a.clone());
@@ -82,8 +101,41 @@ public class Input {
         actions = new LineActions(panel, raster);
     }
 
-    public void invokeAction(int keyChar) {
+    void switchMode(InputMode mode) {
+        if(this.mode == mode) {
+            if(mode != InputMode.Line)
+                switchMode(InputMode.Line);
+            return;
+        }
 
+        switch (this.mode) {
+            case Line:
+                a.reset();
+                b.reset();
+                break;
+            case Poly:
+                polygon = null;
+                actions.tempPolygon(polygon);
+                break;
+            case Vertex:
+                break;
+        }
+
+        a.reset();
+        b.reset();
+        actions.repaint();
+
+        switch (mode) {
+            case Line:
+                break;
+            case Poly:
+                break;
+            case Vertex:
+                break;
+        }
+        this.mode = mode;
+    }
+    public void invokeAction(int keyChar) {
         switch (keyChar) {
             case 'c':
                 actions.clear();
@@ -92,13 +144,7 @@ public class Input {
             case 'p':
                 a.reset();
                 b.reset();
-                if(makePolygon) {
-                    polygon = null;
-                    actions.tempPolygon(polygon);
-                    actions.repaint();
-                }
-                makePolygon = !makePolygon;
-
+                switchMode(InputMode.Poly);
                 break;
             case KeyEvent.VK_SPACE:
                 if(polygon != null && polygon.points.size() > 2)
@@ -108,6 +154,11 @@ public class Input {
                     a.reset();
                     b.reset();
                 }
+                break;
+            case 'e':
+                a.reset();
+                b.reset();
+                switchMode(InputMode.Vertex);
                 break;
             case 'd':
                 actions.makeDotted = !actions.makeDotted;

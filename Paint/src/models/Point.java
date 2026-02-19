@@ -48,4 +48,8 @@ public class Point {
         this.x = p.x;
         this.y = p.y;
     }
+    public void getFromEv(MouseEvent e) {
+        x = e.getX();
+        y = e.getY();
+    }
 }
