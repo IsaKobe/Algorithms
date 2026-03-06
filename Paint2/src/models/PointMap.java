@@ -1,9 +1,12 @@
 package models;
 
+import models.Points.Point;
+import models.Points.PointPointer;
+
 import java.util.ArrayList;
 
 class PointList{
-    public ArrayList<Point> points = new ArrayList<Point>();
+    public ArrayList<PointPointer> points = new ArrayList<PointPointer>();
 }
 
 public class PointMap {
@@ -11,31 +14,34 @@ public class PointMap {
     int w;
     int h;
 
+    static PointMap map;
+
     public PointMap(int x,int y) {
         w = x;
         h = y;
         clearMap();
+        map = this;
     }
     public void clearMap(){
         points = new PointList[w][h];
     }
 
-    void addPoint(Point point) {
-        if(point.getX() < 0 || point.getX() >= w || point.getY() < 0 || point.getY() >= h)
+    public void addPoint(PointPointer point) {
+        if(point.X() < 0 || point.X() >= w || point.Y() < 0 || point.Y() >= h)
             return;
 
-        PointList list = points[point.getX()][point.getY()];
+        PointList list = points[point.X()][point.Y()];
         if(list == null) {
             list = new PointList();
-            points[point.getX()][point.getY()] = list;
+            points[point.X()][point.Y()] = list;
         }
         list.points.add(point);
     }
 
-    void removePoint(Point point) {
-        if(point.getX() < 0 || point.getX() >= w || point.getY() < 0 || point.getY() >= h)
+    void removePoint(PointPointer point) {
+        if(point.X() < 0 || point.X() >= w || point.Y() < 0 || point.Y() >= h)
             return;
-        PointList list = points[point.getX()][point.getY()];
+        PointList list = points[point.X()][point.Y()];
         if(list == null) {
             System.err.println("There are no points");
             return;
@@ -47,17 +53,28 @@ public class PointMap {
             }
         }
         if(list.points.isEmpty()) {
-            points[point.getX()][point.getY()] = null;
+            points[point.X()][point.Y()] = null;
         }
     }
 
-    public void movePoint(Point point, Point newValue) {
+    public void movePoint(PointPointer point, Point newValue) {
         removePoint(point);
+
         point.copy(newValue);
+
         addPoint(point);
+        point.MoveParent();
     }
 
-    Point getPoint(int x, int y){
+    public static void UpdatePoint(PointPointer point, Point newValue){
+        map.removePoint(point);
+
+        point.copy(newValue);
+
+        map.addPoint(point);
+    }
+
+    PointPointer getPoint(int x, int y){
         if(x < points.length && y < points[x].length) {
             if(points[x][y] == null)
                 return null;
@@ -66,9 +83,9 @@ public class PointMap {
         return null;
     }
 
-    public Point findPoint(int x, int y) {
+    public PointPointer findPoint(int x, int y) {
         int maxRange = 10;
-        Point point = null;
+        PointPointer point = null;
         for (int i = 0; i < maxRange; i++) {
             for (int a = x - i; a <= x + i; a++) {
                 for (int b = y - i; b <= y + i; b++) {

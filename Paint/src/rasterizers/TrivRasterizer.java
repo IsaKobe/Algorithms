@@ -51,7 +51,8 @@ public class TrivRasterizer implements Rasterizer {
                     stepI++;
                     continue;
                 }
-                raster.setPixel(xA, i, color);
+                if(!raster.setPixel(xA, i, color)){
+                }
                 stepI++;
             }
         }
