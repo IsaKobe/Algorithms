@@ -77,4 +77,26 @@ public class MyCanvas {
             }
         }
     }
+
+    public boolean DeleteAt(Point p, int radius) {
+        boolean result = false;
+        for (int i = rectList.size()-1; i > -1; i--) {
+            Rect rect = rectList.get(i);
+            p = new Point(p.X() - radius, p.Y() - radius);
+
+            Point tempPoint = p;
+            for(int x = 0; x < radius*2+1; x++){
+                tempPoint.X(p.X()+x);
+                for(int y = 0; y < radius*2+1; y++){
+                    tempPoint.Y(p.Y()+y);
+                    if(rect.PointInBounds(tempPoint)){
+                        rectList.remove(rect);
+                        result = true;
+                    }
+                }
+            }
+
+        }
+        return result;
+    }
 }

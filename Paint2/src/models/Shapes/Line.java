@@ -1,6 +1,7 @@
 package models.Shapes;
 
 import models.Maps.BaseMap;
+import models.Maps.OutLineMap;
 import models.Maps.PointerPointMap;
 import models.Points.Point;
 import models.Points.PointPointer;
@@ -52,12 +53,13 @@ public class Line extends Rect {
         return true;
     }
 
-//    @Override
-//    public boolean PointInBounds(Point point) {
-//        if(super.PointInBounds(point)){
-//            LineUtil.DrawLine();
-//        }
-//    }
+    @Override
+    public boolean PointInBounds(Point point) {
+        if(super.PointInBounds(point)){
+            return OutLineMap.IsRectOnPoint(point.X(), point.Y(), this);
+        }
+        return false;
+    }
 
     @Override
     void Fill() {}

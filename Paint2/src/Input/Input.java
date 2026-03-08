@@ -65,6 +65,11 @@ public class Input {
                     return;
                 actions.moveVertex(temp, p);
                 break;
+            case Rubber:
+                if(dragging){
+                    actions.ClearAt(p);
+                }
+                break;
         }
     }
     /// Mouse down
@@ -159,6 +164,7 @@ public class Input {
                     rect = null;
                     actions.removeTemp();
                 }
+                actions.repaint();
                 break;
             case Vertex:
                 break;
@@ -166,7 +172,6 @@ public class Input {
 
         a.reset();
         b.reset();
-        actions.repaint();
 
         this.mode = mode;
     }
@@ -199,6 +204,9 @@ public class Input {
                 break;
             case 'q':
                 switchMode(InputMode.Test);
+                break;
+            case KeyEvent.VK_DELETE:
+                switchMode(InputMode.Rubber);
                 break;
             case 'd':
                 actions.makeDotted = !actions.makeDotted;

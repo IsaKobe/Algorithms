@@ -52,6 +52,7 @@ public class LineUtil {
         int sy = y0 < y1 ? 1 : -1;
         int error = dx + dy;
 
+
         int iteration = 0;
         boolean draw = true;
         while (true) {

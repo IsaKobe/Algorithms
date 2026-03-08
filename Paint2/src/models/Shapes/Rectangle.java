@@ -81,4 +81,14 @@ public class Rectangle extends Polygon{
             }
         }
     }
+
+    @Override
+    public boolean PointInBounds(Point point) {
+        if(point.X() >= minPoint.X() && point.X() <= maxPoint.X()){
+            if(point.Y() >= minPoint.Y() && point.Y() <= maxPoint.Y()){
+                return true;
+            }
+        }
+        return false;
+    }
 }

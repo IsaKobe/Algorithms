@@ -158,4 +158,9 @@ public class Actions
         }
         return x;
     }
+
+    public void ClearAt(Point p) {
+        if(canvas.DeleteAt(p, 1))
+            repaint();
+    }
 }

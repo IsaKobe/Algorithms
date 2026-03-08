@@ -6,5 +6,7 @@ enum InputMode{
     Poly,
     Vertex,
     Circle,
-    Test, Rectangle
+    Test,
+    Rectangle,
+    Rubber
 }

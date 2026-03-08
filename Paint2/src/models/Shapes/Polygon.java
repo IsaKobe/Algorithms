@@ -13,6 +13,7 @@ import rasterizers.PointUtil;
 
 import java.awt.*;
 import java.util.ArrayList;
+import java.util.Collections;
 
 public class Polygon extends Rect {
     ArrayList<Point> points;
@@ -81,18 +82,42 @@ public class Polygon extends Rect {
     }
 
     @Override
-    void Fill() {
-        for (int y = minPoint.Y(); y < maxPoint.Y(); y++){
-            int x = OutLineMap.GetNextPoint(minPoint.X(), y, maxPoint.X(), this, false);
+    public boolean PointInBounds(Point point) {
+        if(super.PointInBounds(point)){
+            return OutLineMap.IsInside(minPoint.X(), point.Y(), point.X(), this);
+        }
+        return false;
+    }
 
-            while (x < maxPoint.X()-1){
-                x = OutLineMap.GetNextPoint(x, y, maxPoint.X(), this, true);
-                int max = OutLineMap.GetNextPoint(x, y, maxPoint.X(), this, false);
-                for(; x <= max; x++){
+    @Override
+    void Fill() {
+        int minY = minPoint.Y();
+        int maxY = maxPoint.Y();
+
+
+        for (int y = minY; y <= maxY; y++) {
+            ArrayList<Integer> intersections = new ArrayList();
+
+            for (int i = 0; i < points.size(); i++) {
+                Point p1 = points.get(i);
+                Point p2 = points.get((i + 1) % points.size());
+
+                if (p1.Y() == p2.Y()) continue;
+
+                if ((y >= p1.Y() && y < p2.Y()) || (y >= p2.Y() && y < p1.Y())) {
+                    double x = (double)p1.X() + (double)(y - p1.Y()) * (p2.X() - p1.X()) / (p2.Y() - p1.Y());
+                    intersections.add((int) Math.round(x));
+                }
+            }
+
+            Collections.sort(intersections);
+
+            for (int i = 0; i + 1 < intersections.size(); i += 2) {
+                int startX = intersections.get(i);
+                int endX = intersections.get(i + 1);
+                for (int x = startX; x <= endX; x++) {
                     Actions.raster.setPixel(x, y, fillColor);
                 }
-                x = OutLineMap.GetNextPoint(x, y, maxPoint.X(), this, true);
-                x = OutLineMap.GetNextPoint(x, y, maxPoint.X(), this, false);
             }
         }
     }

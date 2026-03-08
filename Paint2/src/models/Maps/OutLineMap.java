@@ -55,7 +55,7 @@ public class OutLineMap extends BaseMap<Rect>{
             res = IsRectOnPoint(sX, sY, rect);
             if(res && !start || !res && start)
             {
-                break;
+                return sX;
             }
         }
         return sX;
