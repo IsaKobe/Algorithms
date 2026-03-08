@@ -6,6 +6,7 @@ import models.Shapes.Polygon;
 import models.MyCanvas;
 import models.Points.Point;
 import models.Shapes.Rect;
+import rasterizers.*;
 import rasters.Raster;
 
 import javax.swing.*;
@@ -14,7 +15,7 @@ import java.awt.*;
 public class Actions
 {
     public final JPanel panel;
-    final Raster raster;
+    public static Raster raster;
 
     final MyCanvas canvas;
 
@@ -26,10 +27,17 @@ public class Actions
     public int GetSpacing(){
         return makeDotted ? spacing : 0;
     }
-    public Actions(JPanel panel, Raster raster){
+    public Actions(JPanel panel, Raster _raster){
+        raster = _raster;
+
         this.canvas = new MyCanvas(raster, panel);
         this.panel = panel;
-        this.raster = raster;
+
+        LineUtil.canvas = canvas;
+        CircleUtil.raster = raster;
+        PointUtil.raster = raster;
+        ElipseUtil.canvas = canvas;
+        PixelUtil.raster = raster;
     }
 
     public static void SnapPoints(Point point, Point a, Point b){
@@ -96,12 +104,6 @@ public class Actions
         return line.getMaxPoint();
     }
 
-    void addPolygonPoint(Polygon polygon, Point a, Point b)
-    {
-        polygon.AddPoint(b.clone());
-        a.copy(b);
-    }
-
     public void addLine(Point a, Point b)
     {
         canvas.addRect(createLine(a, b));
@@ -149,10 +151,10 @@ public class Actions
         return line;
     }
 
-    public Point snapPoint(Point a, Point b) {
+    public Point snapPoint(Point a, Point b, boolean onlyDiagonal) {
         Point x = b.clone();
         if(snapGrid){
-            SnapPoints(x, a, b, true);
+            SnapPoints(x, a, b, onlyDiagonal);
         }
         return x;
     }

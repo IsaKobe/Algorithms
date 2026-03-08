@@ -1,7 +1,8 @@
 package models.Shapes;
 
+import models.Maps.PointerPointMap;
 import models.Points.Point;
-import models.PointMap;
+import models.Maps.BaseMap;
 import models.Points.PointPointer;
 
 import java.awt.*;
@@ -17,7 +18,7 @@ public abstract class Rect{
         return minPoint;
     }
 
-    boolean finished;
+    public boolean finished;
     int dotSpace;
     public void SetDotSpace(int space)
     {
@@ -28,6 +29,7 @@ public abstract class Rect{
     int outlineColor;
     int fillColor;
     boolean drawFilled;
+    int width;
 
     public Rect(Point a, Point b, int space, Color lineColor){
         minPoint = a;
@@ -36,23 +38,22 @@ public abstract class Rect{
         outlineColor = lineColor.getRGB();
         drawFilled = true;
         fillColor = Color.green.getRGB();
+        width = 5;
     }
 
-    public void UpdateSecondPoint(Point b) {
-        maxPoint = b.clone();
-    }
+    public abstract void UpdateSecondPoint(Point b);
 
     final public void Draw(){
+        Outline();
         if(drawFilled)
             Fill();
-        Outline();
     }
 
     abstract void Outline();
 
     abstract void Fill();
 
-    public boolean Finish(PointMap map, int gap) {
+    public boolean Finish(PointerPointMap map, int gap) {
         if(!AddToMap(map)){
             return false;
         }
@@ -61,7 +62,7 @@ public abstract class Rect{
         return true;
     }
 
-    protected boolean AddToMap(PointMap map){
+    protected boolean AddToMap(PointerPointMap map){
         maxPoint = new PointPointer(maxPoint, this);
         minPoint = new PointPointer(minPoint, this);
         map.addPoint((PointPointer) minPoint);
@@ -69,7 +70,14 @@ public abstract class Rect{
         return true;
     }
 
-    public void UpdateVertex(PointPointer pointPointer) {
+    public void UpdateVertex(PointPointer pointPointer) {}
 
+    public boolean PointInBounds(Point point){
+        if(point.X() >= minPoint.X() && point.X() <= maxPoint.X()){
+            if(point.Y() >= minPoint.Y() && point.Y() <= maxPoint.Y()){
+                return true;
+            }
+        }
+        return false;
     }
 }

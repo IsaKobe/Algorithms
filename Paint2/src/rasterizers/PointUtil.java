@@ -3,6 +3,9 @@ package rasterizers;
 import models.Points.Point;
 import rasters.Raster;
 
+import java.util.ArrayList;
+import java.util.List;
+
 public class PointUtil {
     public static Raster raster;
     static int m_radius = 2;
@@ -19,5 +22,25 @@ public class PointUtil {
                 raster.setPixel(x, y, color);
             }
         }
+    }
+
+    public static void MinMaxPoint(Point[] points, Point min, Point max){
+        min.X(Integer.MAX_VALUE);
+        min.Y(Integer.MAX_VALUE);
+        max.X(Integer.MIN_VALUE);
+        max.Y(Integer.MIN_VALUE);
+
+        for (Point point : points) {
+            if(point.X() < min.X())
+                min.X(point.X());
+            if(point.X() > max.X())
+                max.X(point.X());
+
+            if(point.Y() < min.Y())
+                min.Y(point.Y());
+            if(point.Y() > max.Y())
+                max.Y(point.Y());
+        }
+
     }
 }

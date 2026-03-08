@@ -43,11 +43,6 @@ public class DefaultWindow {
         panel.requestFocusInWindow();
 
 
-        LineUtil.raster = raster;
-        CircleUtil.raster = raster;
-        PointUtil.raster = raster;
-        ElipseUtil.raster = raster;
-        PixelUtil.raster = raster;
         Input input = new Input(panel, raster);
     }
 }

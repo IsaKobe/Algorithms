@@ -1,9 +1,14 @@
 package models.Shapes;
 
+import Input.Actions;
+import models.Maps.OutLineMap;
+import models.Maps.PointerPointMap;
+import models.MyCanvas;
 import models.Points.Point;
-import models.PointMap;
+import models.Maps.BaseMap;
 import models.Points.PointPointer;
 import rasterizers.LineUtil;
+import rasterizers.PixelUtil;
 import rasterizers.PointUtil;
 
 import java.awt.*;
@@ -40,16 +45,8 @@ public class Polygon extends Rect {
             maxPoint.Y(y);
     }
 
-    protected void RecalculatePoints(){
-        for (int i = 0; i < points.size(); i++) {
-            RecalculatePoint(points.get(i));
-        }
-        Draw();
-    }
-
-
     @Override
-    protected boolean AddToMap(PointMap map) {
+    protected boolean AddToMap(PointerPointMap map) {
         if(points.size() < 3)
             return false;
         for (int i = 0; i < points.size(); i++) {
@@ -61,21 +58,43 @@ public class Polygon extends Rect {
     }
 
     @Override
+    public void UpdateSecondPoint(Point b) {
+        return;
+    }
+
+    @Override
+    public void UpdateVertex(PointPointer pointPointer) {
+        PointUtil.MinMaxPoint(points.toArray(new Point[0]), minPoint, maxPoint);
+    }
+
+    @Override
     void Outline() {
         for (int i = 0; i < points.size() - 1; i++) {
-            LineUtil.DrawLine(points.get(i), points.get(i + 1), dotSpace, outlineColor);
+            LineUtil.DrawLine(points.get(i), points.get(i + 1), dotSpace, width, outlineColor, this);
             PointUtil.DrawPoint(points.get(i),  outlineColor);
         }
         if(finished)
         {
-            LineUtil.DrawLine(points.getFirst(), points.getLast(), dotSpace, outlineColor);
+            LineUtil.DrawLine(points.getFirst(), points.getLast(), dotSpace, width, outlineColor, this);
             PointUtil.DrawPoint(points.getLast(), outlineColor);
         }
     }
 
     @Override
     void Fill() {
+        for (int y = minPoint.Y(); y < maxPoint.Y(); y++){
+            int x = OutLineMap.GetNextPoint(minPoint.X(), y, maxPoint.X(), this, false);
 
+            while (x < maxPoint.X()-1){
+                x = OutLineMap.GetNextPoint(x, y, maxPoint.X(), this, true);
+                int max = OutLineMap.GetNextPoint(x, y, maxPoint.X(), this, false);
+                for(; x <= max; x++){
+                    Actions.raster.setPixel(x, y, fillColor);
+                }
+                x = OutLineMap.GetNextPoint(x, y, maxPoint.X(), this, true);
+                x = OutLineMap.GetNextPoint(x, y, maxPoint.X(), this, false);
+            }
+        }
     }
 
 }

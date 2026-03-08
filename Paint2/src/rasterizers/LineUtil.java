@@ -1,16 +1,50 @@
 package rasterizers;
 
+import models.MyCanvas;
 import models.Points.Point;
+import models.Shapes.Rect;
 import rasters.Raster;
 
 public class LineUtil {
-    public static Raster raster;
+    public static MyCanvas canvas;
 
-    public static void DrawLine(Point a, Point b, int pixelGap, int color) {
-        int x0 = a.X();
-        int x1 = b.X();
-        int y0 = a.Y();
-        int y1 = b.Y();
+    public static void DrawLine(Point a, Point b, int pixelGap, int width, int color, Rect toSave){
+        Point x = a.clone();
+        Point y = b.clone();
+
+        int dY = Math.abs(y.Y() - x.Y());
+        int dX = Math.abs(y.X() - x.X());
+        double offset = (width-1)*Math.sqrt(Math.pow((dX),2)+Math.pow((dY),2));
+
+        if(dY < dX)
+        {
+            if(dY == 0)
+                offset = width - 2;
+            else
+                offset /= (2*dX);
+            for(int i = 1; i < offset; i++)
+            {
+                DrawLine(x.X(),x.Y()-i, y.X(), y.Y()-i, pixelGap, color, null );
+                DrawLine(x.X(),x.Y()+i, y.X(), y.Y()+i, pixelGap, color, null);
+            }
+        }
+        else
+        {
+            if(dX == 0)
+                offset = width - 2;
+            else
+                offset /= (2*dY);
+
+            for(int i = 1; i < offset; i++)
+            {
+                DrawLine(x.X()-i, x.Y(), y.X()-i, y.Y(), pixelGap, color, null);
+                DrawLine(x.X()+i, x.Y(), y.X()+i, y.Y(), pixelGap, color, null);
+            }
+        }
+        DrawLine(x.X(), x.Y(), y.X(), y.Y(), pixelGap, color, toSave);
+    }
+
+    static void DrawLine(int x0, int y0, int x1, int y1, int pixelGap, int color, Rect toSave) {
 
         int dx = Math.abs(x1 - x0);
         int sx = x0 < x1 ? 1 : -1;
@@ -22,7 +56,7 @@ public class LineUtil {
         boolean draw = true;
         while (true) {
             if(draw)
-                raster.setPixel(x0, y0, color);
+                canvas.PaintOutline(x0, y0, color, toSave);
 
             int e2 = 2 * error;
             if (e2 >= dy){

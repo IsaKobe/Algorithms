@@ -3,10 +3,9 @@ package Input;
 import Input.Callbacks.Keyboard;
 import Input.Callbacks.Mouse;
 import models.Points.PointPointer;
-import models.Shapes.Circle;
-import models.Shapes.Polygon;
+import models.Shapes.*;
 import models.Points.Point;
-import models.Shapes.Rect;
+import models.Shapes.Polygon;
 import models.Shapes.Rectangle;
 import rasters.Raster;
 
@@ -31,12 +30,7 @@ public class Input {
             = false;
     public void release(MouseEvent e) {
         switch (mode){
-            case Line:
-                b.X(e.getX());
-                b.Y(e.getY());
-                actions.addLine(a,b);
-                break;
-            case Circle, Rectangle:
+            case Circle, Rectangle, Line:
                 if(rect != null){
                     actions.finishRect();
                     rect = null;
@@ -59,18 +53,12 @@ public class Input {
                     b = actions.drawTempLine(a, b);
                 System.out.println(b);
                 break;
-            case Circle, Rectangle:
+            case Circle, Rectangle, Line:
                 b = p;
                 if(rect != null){
-                    (rect).UpdateSecondPoint(actions.snapPoint(a, b));
+                    (rect).UpdateSecondPoint(actions.snapPoint(a, b, mode != InputMode.Line));
                     actions.repaint();
                 }
-                break;
-            case Line:
-                if(!isDrag)
-                    return;
-                b = p;
-                actions.drawTempLine(a, b);
                 break;
             case Vertex:
                 if(!isDrag || temp == null)
@@ -85,6 +73,8 @@ public class Input {
             case Line:
                 a.getFromEv(e);
                 b.copy(a);
+                rect = new Line(a.clone(), a.clone(), actions.GetSpacing(), Color.red);
+                actions.addTemp(rect);
                 break;
             case Vertex:
                 temp = actions.tryTakeVertex(new Point(e));
@@ -92,7 +82,7 @@ public class Input {
             case Circle:
                 a.getFromEv(e);
                 b.copy(a);
-                rect = new Circle(a.clone(), actions.GetSpacing(), Color.red);
+                rect = new Elipse(a.clone(), actions.GetSpacing(), Color.red);
                 actions.addTemp(rect);
                 break;
             case Rectangle:
@@ -107,15 +97,23 @@ public class Input {
 
 
     public void click(MouseEvent e) {
-        if(rect == null){
-            a.getFromEv(e);
-            rect = new Polygon(a, actions.GetSpacing(), Color.red);
-            actions.addTemp(rect);
+        switch (mode){
+            case Poly:
+                if(rect == null){
+                    a.getFromEv(e);
+                    rect = new Polygon(a, actions.GetSpacing(), Color.red);
+                    actions.addTemp(rect);
+                }
+                else{
+                    ((Polygon) rect).AddPoint(b);
+                    a.copy(b);
+                }
+                break;
+            case Test:
+                actions.canvas.GetRect(new Point(e));
+                break;
         }
-        else{
-            ((Polygon) rect).AddPoint(b);
-            a.copy(b);
-        }
+
     }
 
 
@@ -198,6 +196,9 @@ public class Input {
                 break;
             case 'r':
                 switchMode(InputMode.Rectangle);
+                break;
+            case 'q':
+                switchMode(InputMode.Test);
                 break;
             case 'd':
                 actions.makeDotted = !actions.makeDotted;

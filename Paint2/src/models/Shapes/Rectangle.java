@@ -1,9 +1,12 @@
 package models.Shapes;
 
-import models.PointMap;
+import models.Maps.BaseMap;
+import models.Maps.PointerPointMap;
 import models.Points.Point;
 import models.Points.PointPointer;
+import rasterizers.LineUtil;
 import rasterizers.PixelUtil;
+import rasterizers.PointUtil;
 
 import java.awt.*;
 
@@ -11,10 +14,9 @@ public class Rectangle extends Polygon{
 
     public Rectangle(Point a, int space, Color lineColor) {
         super(a, space, lineColor);
-        AddPoint(new Point());
-        AddPoint(new Point());
-        AddPoint(new Point());
-        finished = true;
+        AddPoint(a.clone());
+        AddPoint(a.clone());
+        AddPoint(a.clone());
     }
 
     @Override
@@ -26,7 +28,18 @@ public class Rectangle extends Polygon{
     public void UpdateVertex(PointPointer point){
         UpdatePoint(point, points.indexOf(point));
     }
-    
+
+    @Override
+    void Outline() {
+        for (int i = 0; i < points.size() - 1; i++) {
+            LineUtil.DrawLine(points.get(i), points.get(i + 1), dotSpace, width, outlineColor, this);
+            PointUtil.DrawPoint(points.get(i),  outlineColor);
+        }
+        LineUtil.DrawLine(points.getFirst(), points.getLast(), dotSpace, width, outlineColor, this);
+        PointUtil.DrawPoint(points.getLast(), outlineColor);
+    }
+
+
     void UpdatePoint(Point point, int index){
         Point a = points.get((index + 2) % 4);
         Point b = points.get(index);
@@ -43,8 +56,8 @@ public class Rectangle extends Polygon{
         int numB = a.X() < b.X() ? p : n;
 
         if(points.get(numA) instanceof PointPointer){
-            PointMap.UpdatePoint((PointPointer) points.get(numA), new Point(b.X(), a.Y()));
-            PointMap.UpdatePoint((PointPointer) points.get(numB), new Point(a.X(), b.Y()));
+            PointerPointMap.UpdatePoint((PointPointer) points.get(numA), new Point(b.X(), a.Y()));
+            PointerPointMap.UpdatePoint((PointPointer) points.get(numB), new Point(a.X(), b.Y()));
         }
         else{
             points.get(numA).X(b.X());
@@ -62,7 +75,6 @@ public class Rectangle extends Polygon{
 
     @Override
     void Fill() {
-
         for (int x = minPoint.X(); x < maxPoint.X(); x++){
             for (int y = minPoint.Y(); y < maxPoint.Y(); y++){
                 PixelUtil.DrawPixel(x, y, fillColor);
