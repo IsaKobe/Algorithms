@@ -1,6 +1,5 @@
 package Input;
 
-import Input.Callbacks.Keyboard;
 import Input.Callbacks.Mouse;
 import models.Points.PointPointer;
 import models.Shapes.*;
@@ -12,6 +11,7 @@ import rasters.Raster;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.*;
+import java.util.ArrayList;
 
 
 public class Input {
@@ -24,10 +24,12 @@ public class Input {
 
     Rect rect;
 
-    InputMode mode = InputMode.Line;
+    InputMode mode = InputMode.Test;
 
-    boolean dragging
-            = false;
+    ArrayList<JToggleButton> buttonList = new ArrayList<JToggleButton>();
+
+    Point downPoint;
+    boolean dragging = false;
     public void release(MouseEvent e) {
         switch (mode){
             case Circle, Rectangle, Line:
@@ -46,15 +48,22 @@ public class Input {
 
     public void UpdateB(Point p, boolean isDrag) {
         dragging = isDrag;
+        b = p;
         switch (mode){
+            case Test:
+                if(!dragging || rect == null)
+                    return;
+                Point diff = p.minus(downPoint);
+                rect.Move(diff);
+                downPoint = p.clone();
+                actions.repaint();
+                break;
             case Poly:
-                b = p;
                 if(rect != null)
                     b = actions.drawTempLine(a, b);
                 System.out.println(b);
                 break;
             case Circle, Rectangle, Line:
-                b = p;
                 if(rect != null){
                     (rect).UpdateSecondPoint(actions.snapPoint(a, b, mode != InputMode.Line));
                     actions.repaint();
@@ -69,16 +78,22 @@ public class Input {
                 if(dragging){
                     actions.ClearAt(p);
                 }
+
                 break;
         }
     }
     /// Mouse down
     public void press(MouseEvent e) {
         switch (mode) {
+            case Test:
+                downPoint = new Point(e);
+                rect = actions.canvas.GetRect(downPoint.clone());
+                System.out.println(rect);
+                break;
             case Line:
                 a.getFromEv(e);
                 b.copy(a);
-                rect = new Line(a.clone(), a.clone(), actions.GetSpacing(), Color.red);
+                rect = new Line(a.clone(), b.clone());
                 actions.addTemp(rect);
                 break;
             case Vertex:
@@ -87,13 +102,13 @@ public class Input {
             case Circle:
                 a.getFromEv(e);
                 b.copy(a);
-                rect = new Elipse(a.clone(), actions.GetSpacing(), Color.red);
+                rect = new Elipse(a.clone());
                 actions.addTemp(rect);
                 break;
             case Rectangle:
                 a.getFromEv(e);
                 b.copy(a);
-                rect = new Rectangle(a.clone(), actions.GetSpacing(), Color.red);
+                rect = new Rectangle(a.clone());
                 actions.addTemp(rect);
                 break;
 
@@ -106,16 +121,13 @@ public class Input {
             case Poly:
                 if(rect == null){
                     a.getFromEv(e);
-                    rect = new Polygon(a, actions.GetSpacing(), Color.red);
+                    rect = new Polygon(a);
                     actions.addTemp(rect);
                 }
                 else{
                     ((Polygon) rect).AddPoint(b);
                     a.copy(b);
                 }
-                break;
-            case Test:
-                actions.canvas.GetRect(new Point(e));
                 break;
         }
 
@@ -140,19 +152,97 @@ public class Input {
     }
 
 
-    public Input(JPanel panel, Raster raster)
+    public Input(JPanel panel, Raster raster, JMenuBar bar)
     {
         a = new Point(0,0);
         b = new Point(0,0);
         new Mouse(this, panel);
-        new Keyboard(this, panel);
+
         actions = new Actions(panel, raster);
+
+        FinishAction(panel);
+        ClearPanel(panel);
+        MakeDotted(panel);
+        SnapToGrid(panel);
+
+    }
+    void FinishAction(JPanel panel){
+        String mapKey = "finish polygon";
+        panel.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW)
+                .put(KeyStroke.getKeyStroke(KeyEvent.VK_ENTER, 0), mapKey);
+
+        panel.getActionMap().put(mapKey, new AbstractAction() {
+            @Override
+            public void actionPerformed(java.awt.event.ActionEvent e) {
+                if(rect != null && actions.finishRect()){
+                    rect = null;
+                    a.reset();
+                    b.reset();
+                }
+            }
+        });
     }
 
-    void switchMode(InputMode mode) {
+    void ClearPanel(JPanel panel){
+        String mapKey = "clear panel";
+        panel.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW)
+                .put(KeyStroke.getKeyStroke('c'), mapKey);
+
+        panel.getActionMap().put(mapKey, new AbstractAction() {
+            @Override
+            public void actionPerformed(java.awt.event.ActionEvent e) {
+                actions.clear();
+                rect = null;
+                a.reset();
+                b.reset();
+            }
+        });
+    }
+
+    void MakeDotted(JPanel panel){
+//        String mapKey = "make dot";
+//        panel.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW)
+//                .put(KeyStroke.getKeyStroke('d'), mapKey);
+//
+//        panel.getActionMap().put(mapKey, new AbstractAction() {
+//            @Override
+//            public void actionPerformed(java.awt.event.ActionEvent e) {
+//                actions.makeDotted = !actions.makeDotted;
+//                if(rect != null)
+//                    rect.SetDotSpace(actions.GetSpacing());
+//                actions.repaint();
+//
+//                actions.drawTempLine(a, b);
+//            }
+//        });
+    }
+    void SnapToGrid(JPanel panel){
+        String mapPress = "press snap";
+        String mapRelease = "release snap";
+
+        panel.getInputMap().put(KeyStroke.getKeyStroke(KeyEvent.VK_SHIFT, InputEvent.SHIFT_DOWN_MASK, false), mapPress);
+        panel.getActionMap().put(mapPress, new AbstractAction() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                actions.snapGrid = true;
+                UpdateB(b, dragging);
+            }
+        });
+
+        panel.getInputMap().put(KeyStroke.getKeyStroke(KeyEvent.VK_SHIFT, 0, true), mapRelease);
+        panel.getActionMap().put(mapRelease, new AbstractAction() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                actions.snapGrid = false;
+                UpdateB(b, dragging);
+            }
+        });
+    }
+
+    public void switchMode(InputMode mode) {
         if(this.mode == mode) {
-            if(mode != InputMode.Line)
-                switchMode(InputMode.Line);
+            if(mode != InputMode.Test)
+                switchMode(InputMode.Test);
             return;
         }
 
@@ -170,64 +260,49 @@ public class Input {
                 break;
         }
 
+        rect = null;
+        this.mode = mode;
+
         a.reset();
         b.reset();
 
-        this.mode = mode;
-    }
-    public void invokeAction(int keyChar) {
-        switch (keyChar) {
-            case 'c':
-                actions.clear();
-                rect = null;
-                a.reset();
-                b.reset();
-                break;
-            case 'p':
-                switchMode(InputMode.Poly);
-                break;
-            case KeyEvent.VK_SPACE:
-                if(rect != null && actions.finishRect()){
-                    rect = null;
-                    a.reset();
-                    b.reset();
-                }
-                break;
-            case 'e':
-                switchMode(InputMode.Vertex);
-                break;
-            case 'k':
-                switchMode(InputMode.Circle);
-                break;
-            case 'r':
-                switchMode(InputMode.Rectangle);
-                break;
-            case 'q':
-                switchMode(InputMode.Test);
-                break;
-            case KeyEvent.VK_DELETE:
-                switchMode(InputMode.Rubber);
-                break;
-            case 'd':
-                actions.makeDotted = !actions.makeDotted;
-                if(rect != null)
-                    rect.SetDotSpace(actions.GetSpacing());
-                actions.repaint();
 
-                actions.drawTempLine(a, b);
-                break;
+        buttonList.get(mode.ordinal()).setSelected(true);
+    }
+
+
+    public void SetButtons(ArrayList<JToggleButton> buttons) {
+        buttonList = buttons;
+    }
+
+    public void SetColor(Color newColor, boolean outlineSet) {
+        int col = newColor.getRGB();
+        if(outlineSet)
+            actions.outlineColor = col;
+        else
+            actions.fillColor = col;
+        if(rect != null){
+            if(outlineSet)
+                rect.outlineColor = col;
+            else
+                rect.fillColor = col;
+            actions.repaint();
         }
     }
 
-    public void changeDrawType(int key, boolean pressed) {
-        switch (key) {
-            case KeyEvent.VK_SHIFT:
-                actions.snapGrid = pressed;
-                break;
-            default:
-                return;
+    public void setWidth(int value) {
+        actions.lineWidth = value;
+        if(rect != null){
+            rect.width = value;
+            actions.repaint();
         }
-        UpdateB(b.clone(), dragging);
     }
 
+    public void setSpacing(int value) {
+        actions.spacing = value;
+        if(rect != null){
+            rect.SetDotSpace(actions.GetSpacing());
+            actions.repaint();
+        }
+    }
 }

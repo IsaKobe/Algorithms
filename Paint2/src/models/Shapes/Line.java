@@ -1,20 +1,16 @@
 package models.Shapes;
 
-import models.Maps.BaseMap;
-import models.Maps.OutLineMap;
 import models.Maps.PointerPointMap;
 import models.Points.Point;
 import models.Points.PointPointer;
 import rasterizers.LineUtil;
 import rasterizers.PointUtil;
 
-import java.awt.*;
-
 public class Line extends Rect {
 
-    public Line(Point _a, Point _b, int space, Color lineColor)
+    public Line(Point _a, Point _b)
     {
-        super(_a, _b, space, lineColor);
+        super(_a, _b);
         start = _a.clone();
         end = _b.clone();
     }
@@ -38,8 +34,8 @@ public class Line extends Rect {
     }
 
     @Override
-    void Outline() {
-        LineUtil.DrawLine(start, end, dotSpace, width, outlineColor, this);
+    public void Draw() {
+        LineUtil.DrawLine(start, end, dotSpace, width, outlineColor);
         PointUtil.DrawPoint(start, outlineColor);
         PointUtil.DrawPoint(end, outlineColor);
     }
@@ -56,12 +52,27 @@ public class Line extends Rect {
     @Override
     public boolean PointInBounds(Point point) {
         if(super.PointInBounds(point)){
-            return OutLineMap.IsRectOnPoint(point.X(), point.Y(), this);
+            int diff = end.X() - start.X();
+            if(diff != 0){
+                float d = (float)(end.Y() - start.Y()) / diff;
+
+                int x = point.X() - start.X();
+                int y = Math.round(x * d) + start.Y();
+
+                return Math.abs(point.Y() - y) < 2;
+            }
+            else{
+                return true;
+            }
         }
         return false;
     }
 
-    @Override
-    void Fill() {}
 
+    @Override
+    public void Move(Point diff) {
+        super.Move(diff);
+        PointerPointMap.UpdatePoint((PointPointer) start, start.plus(diff));
+        PointerPointMap.UpdatePoint((PointPointer) end, end.plus(diff));
+    }
 }

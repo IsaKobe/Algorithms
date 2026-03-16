@@ -1,6 +1,4 @@
 package models;
-import models.Maps.BaseMap;
-import models.Maps.OutLineMap;
 import models.Maps.PointerPointMap;
 import models.Points.Point;
 import models.Points.PointPointer;
@@ -15,7 +13,6 @@ public class MyCanvas {
     List<Rect> rectList;
     JPanel panel;
     PointerPointMap map;
-    OutLineMap outlineMap;
     Raster raster;
 
 
@@ -24,11 +21,9 @@ public class MyCanvas {
         this.panel = panel;
         raster = _raster;
         map = new PointerPointMap(raster.getWidth(), raster.getHeight());
-        outlineMap = new OutLineMap(raster.getWidth(), raster.getHeight());
     }
 
     public void draw() {
-        outlineMap.clearMap();
         for (Rect rect : rectList) {
             rect.Draw();
         }
@@ -38,7 +33,6 @@ public class MyCanvas {
     public void clear() {
         rectList.clear();
         map.clearMap();
-        outlineMap.clearMap();
     }
 
     public PointPointer GetClosestPoint(Point point) {
@@ -58,24 +52,41 @@ public class MyCanvas {
         rectList.removeLast();
         draw();
     }
-    public boolean FinishRect(int gap){
-        return rectList.getLast().Finish(map, gap);
+    public boolean FinishRect(){
+        return rectList.getLast().Finish(map);
     }
 
-    public void PaintOutline(int x0, int y0, int color, Rect rect) {
+    public void PaintOutline(int x0, int y0, int color) {
         raster.setPixel(x0, y0, color);
-        if(rect != null && rect.finished)
-            outlineMap.addPoint(x0, y0, rect);
     }
 
-    public void GetRect(Point point) {
+    public Rect GetRect(Point point) {
+        int maxRange = 5;
+        int x = point.X();
+        int y = point.Y();
+        Rect result;
+        for (int i = 0; i < maxRange; i++) {
+            for (int a = x - i; a <= x + i; a++) {
+                point.X(a);
+                for (int b = y - i; b <= y + i; b++) {
+                    point.Y(b);
+                    if((result = GetRectOnePoint(point)) != null)
+                        return result;
+                }
+            }
+        }
+        return null;
+    }
+
+
+    Rect GetRectOnePoint(Point point){
         for (int i = rectList.size()-1; i > -1; i--) {
             Rect rect = rectList.get(i);
             if(rect.PointInBounds(point)){
-                System.out.println("clicked in:" + rect);
-                return;
+                return rect;
             }
         }
+        return null;
     }
 
     public boolean DeleteAt(Point p, int radius) {

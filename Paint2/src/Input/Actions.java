@@ -2,7 +2,6 @@ package Input;
 
 import models.Points.PointPointer;
 import models.Shapes.Line;
-import models.Shapes.Polygon;
 import models.MyCanvas;
 import models.Points.Point;
 import models.Shapes.Rect;
@@ -19,14 +18,17 @@ public class Actions
 
     final MyCanvas canvas;
 
-    boolean showPreview = true;
-    boolean makeDotted = false;
     boolean snapGrid = false;
-    int spacing = 5;
+    int spacing = 0;
+
+    int outlineColor = Color.RED.getRGB();
+    int fillColor = Color.green.getRGB();
+    int lineWidth = 3;
 
     public int GetSpacing(){
-        return makeDotted ? spacing : 0;
+        return spacing;
     }
+
     public Actions(JPanel panel, Raster _raster){
         raster = _raster;
 
@@ -97,30 +99,37 @@ public class Actions
             return b;
         clear(Color.black.getRGB(), false);
 
-        Line line = createLine(a, b.clone());
+        Point x = new Point(b.X(), b.Y());
+        if(snapGrid) {
+            SnapPoints(x, a, b);
+        }
+        Line line = new Line(a.clone(), x);
+        fillRectData(line);
+
         canvas.draw();
         line.Draw();
 
         return line.getMaxPoint();
     }
 
-    public void addLine(Point a, Point b)
-    {
-        canvas.addRect(createLine(a, b));
-        canvas.FinishRect(GetSpacing());
-    }
-
     public void addTemp(Rect rect) {
         canvas.addRect(rect);
+        fillRectData(rect);
     }
 
-    public void removeTemp()
-    {
+    void fillRectData(Rect rect){
+        rect.SetDotSpace(spacing);
+        rect.width = lineWidth;
+        rect.outlineColor = outlineColor;
+        rect.fillColor = fillColor;
+    }
+
+    public void removeTemp(){
         canvas.removeRect();
     }
 
     public boolean finishRect() {
-        if(canvas.FinishRect(GetSpacing())){
+        if(canvas.FinishRect()){
             repaint();
             return true;
         }
@@ -139,16 +148,6 @@ public class Actions
     public void moveVertex(PointPointer point, Point newVal){
         canvas.moveVertex(point, newVal);
         repaint();
-    }
-
-    Line createLine(Point a, Point b) {
-        Line line;
-        Point x = new Point(b.X(), b.Y());
-        if(snapGrid) {
-            SnapPoints(x, a, b);
-        }
-        line = new Line(a.clone(), x, GetSpacing(), Color.red);
-        return line;
     }
 
     public Point snapPoint(Point a, Point b, boolean onlyDiagonal) {

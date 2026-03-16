@@ -1,25 +1,21 @@
 package models.Shapes;
 
 import Input.Actions;
-import models.Maps.OutLineMap;
 import models.Maps.PointerPointMap;
-import models.MyCanvas;
 import models.Points.Point;
-import models.Maps.BaseMap;
 import models.Points.PointPointer;
 import rasterizers.LineUtil;
-import rasterizers.PixelUtil;
 import rasterizers.PointUtil;
 
-import java.awt.*;
 import java.util.ArrayList;
 import java.util.Collections;
 
 public class Polygon extends Rect {
     ArrayList<Point> points;
 
-    public Polygon(Point startPoint, int space, Color color) {
-        super(startPoint.clone(), startPoint.clone(), space, color);
+
+    public Polygon(Point startPoint) {
+        super(startPoint.clone(), startPoint.clone());
         points = new ArrayList<>();
         AddPoint(startPoint);
     }
@@ -69,14 +65,19 @@ public class Polygon extends Rect {
     }
 
     @Override
+    public void Draw() {
+        Fill();
+        Outline();
+    }
+
     void Outline() {
         for (int i = 0; i < points.size() - 1; i++) {
-            LineUtil.DrawLine(points.get(i), points.get(i + 1), dotSpace, width, outlineColor, this);
+            LineUtil.DrawLine(points.get(i), points.get(i + 1), dotSpace, width, outlineColor);
             PointUtil.DrawPoint(points.get(i),  outlineColor);
         }
         if(finished)
         {
-            LineUtil.DrawLine(points.getFirst(), points.getLast(), dotSpace, width, outlineColor, this);
+            LineUtil.DrawLine(points.getFirst(), points.getLast(), dotSpace, width, outlineColor);
             PointUtil.DrawPoint(points.getLast(), outlineColor);
         }
     }
@@ -84,37 +85,34 @@ public class Polygon extends Rect {
     @Override
     public boolean PointInBounds(Point point) {
         if(super.PointInBounds(point)){
-            return OutLineMap.IsInside(minPoint.X(), point.Y(), point.X(), this);
+
+            int x = point.X();
+            int y = point.Y();
+
+            ArrayList<Integer> intersections = getIntersections(y);
+
+            for (int i = 0; i < intersections.size(); i+=2) {
+                if(x > intersections.get(i) && x < intersections.get(i+1)){
+                    return true;
+                }
+            }
+
+            return false;
         }
         return false;
     }
 
-    @Override
+
     void Fill() {
         int minY = minPoint.Y();
         int maxY = maxPoint.Y();
 
-
         for (int y = minY; y <= maxY; y++) {
-            ArrayList<Integer> intersections = new ArrayList();
+            ArrayList<Integer> tmpIntersections = getIntersections(y);
 
-            for (int i = 0; i < points.size(); i++) {
-                Point p1 = points.get(i);
-                Point p2 = points.get((i + 1) % points.size());
-
-                if (p1.Y() == p2.Y()) continue;
-
-                if ((y >= p1.Y() && y < p2.Y()) || (y >= p2.Y() && y < p1.Y())) {
-                    double x = (double)p1.X() + (double)(y - p1.Y()) * (p2.X() - p1.X()) / (p2.Y() - p1.Y());
-                    intersections.add((int) Math.round(x));
-                }
-            }
-
-            Collections.sort(intersections);
-
-            for (int i = 0; i + 1 < intersections.size(); i += 2) {
-                int startX = intersections.get(i);
-                int endX = intersections.get(i + 1);
+            for (int i = 0; i + 1 < tmpIntersections.size(); i += 2) {
+                int startX = tmpIntersections.get(i);
+                int endX = tmpIntersections.get(i + 1);
                 for (int x = startX; x <= endX; x++) {
                     Actions.raster.setPixel(x, y, fillColor);
                 }
@@ -122,4 +120,28 @@ public class Polygon extends Rect {
         }
     }
 
+    ArrayList<Integer> getIntersections(int y) {
+        ArrayList<Integer> intersections = new ArrayList<Integer>();
+        for (int i = 0; i < points.size(); i++) {
+            Point p1 = points.get(i);
+            Point p2 = points.get((i + 1) % points.size());
+
+            if (p1.Y() == p2.Y()) continue;
+
+            if ((y >= p1.Y() && y < p2.Y()) || (y >= p2.Y() && y < p1.Y())) {
+                double x = p1.X() + (double)(y - p1.Y()) * (p2.X() - p1.X()) / (p2.Y() - p1.Y());
+                intersections.add((int) Math.round(x));
+            }
+        }
+        Collections.sort(intersections);
+        return intersections;
+    }
+
+    @Override
+    public void Move(Point diff) {
+        super.Move(diff);
+        for (Point point : points) {
+            PointerPointMap.UpdatePoint((PointPointer) point, point.plus(diff));
+        }
+    }
 }

@@ -57,4 +57,16 @@ public class Point {
     public String toString() {
         return x + ", " + y;
     }
+
+    public Point minus(Point p) {
+        return new Point(x - p.x, y - p.y);
+    }
+    public Point plus(Point p) {
+        return new Point(x + p.x, y + p.y);
+    }
+
+    public void MoveBy(Point diff) {
+        x += diff.x;
+        y += diff.y;
+    }
 }

@@ -2,12 +2,13 @@ package rasterizers;
 
 import models.MyCanvas;
 import models.Points.Point;
-import models.Shapes.Rect;
-import rasters.Raster;
+
+import java.awt.*;
+import java.util.ArrayList;
 
 public class ElipseUtil {
     public static MyCanvas canvas;
-    public static void DrawElipse(Point a, Point b, int gap, int width, int color, Rect rect){
+    public static void DrawElipse(Point a, Point b, int gap, int width, int color, int fillColor, ArrayList<Integer>[] points){
         int cX = (a.X()+b.X())/2;
         int cY = (a.Y()+b.Y())/2;
 
@@ -17,18 +18,18 @@ public class ElipseUtil {
 
         if(XRadius - width < 2 || YRadius - width < 2)
         {
-            LineUtil.DrawLine(a, b, gap, width, color, rect);
+            LineUtil.DrawLine(a, b, gap, width, color);
             return;
         }
-        DrawElipse(cX, cY, XRadius, YRadius, gap, color, false, rect);
 
         for (int i = 0; i < width; i++) {
-            DrawElipse(cX, cY, XRadius + i, YRadius + i, gap, color, i+1 < width, null);
-            DrawElipse(cX, cY, XRadius - i, YRadius - i, gap, color, i+1 < width, null);
+            DrawElipse(cX, cY, XRadius + i, YRadius + i, gap, color, true, -1, null);
+            DrawElipse(cX, cY, XRadius - i, YRadius - i, gap, color, true, -1, null);
         }
+        DrawElipse(cX, cY, XRadius, YRadius, gap, color, false, fillColor, points);
     }
 
-    static void DrawElipse(int cX, int cY, int XRadius, int YRadius, int gap, int color, boolean bold, Rect rect){
+    static void DrawElipse(int cX, int cY, int XRadius, int YRadius, int gap, int color, boolean bold, int insideColor, ArrayList<Integer>[] points){
         int TwoASquare = 2*XRadius*XRadius;
         int TwoBSquare = 2*YRadius*YRadius;
         int X = XRadius;
@@ -44,12 +45,14 @@ public class ElipseUtil {
         while (StoppingX >= StoppingY)
         {
             if(active){
-                Plot4EllipsePoints(X, Y, cX, cY, color, rect);
+                Plot4EllipsePoints(X, Y, cX, cY, color);
                 if(bold){
-                    Plot4EllipsePoints(X + 1, Y, cX, cY, color, null);
-                    Plot4EllipsePoints(X - 1, Y, cX, cY, color, null);
+                    Plot4EllipsePoints(X + 1, Y, cX, cY, color);
+                    Plot4EllipsePoints(X - 1, Y, cX, cY, color);
                 }
+
             }
+            fillLine(cX, cY, insideColor, X, Y, XRadius, YRadius, points);
 
             Y++;
             StoppingY += TwoASquare;
@@ -84,10 +87,10 @@ public class ElipseUtil {
         while (StoppingX <= StoppingY)
         {
             if(active){
-                Plot4EllipsePoints(X, Y, cX, cY, color, rect);
+                Plot4EllipsePoints(X, Y, cX, cY, color);
                 if(bold){
-                    Plot4EllipsePoints(X, Y+1, cX, cY, color, null);
-                    Plot4EllipsePoints(X, Y-1, cX, cY, color, null);
+                    Plot4EllipsePoints(X, Y+1, cX, cY, color);
+                    Plot4EllipsePoints(X, Y-1, cX, cY, color);
                 }
             }
 
@@ -97,6 +100,7 @@ public class ElipseUtil {
             XChange += TwoBSquare;
 
             if ((2 * EllipseError + YChange) > 0) {
+                fillLine(cX, cY, insideColor, X, Y, XRadius, YRadius, points);
                 Y--;
                 StoppingY -= TwoASquare;
                 EllipseError += YChange;
@@ -110,12 +114,33 @@ public class ElipseUtil {
         }
     }
 
+    private static void fillLine(int cX, int cY, int insideColor, int x, int y, int xRadius, int yRadius, ArrayList<Integer>[] points) {
+        if(insideColor != -1){
+            markPoint(points, yRadius + y, xRadius-x);
+            markPoint(points, yRadius - y, xRadius-x);
+            markPoint(points, yRadius + y, xRadius+x);
+            markPoint(points, yRadius - y, xRadius+x);
 
-    static void Plot4EllipsePoints(int x, int y, int cX, int cY, int color, Rect rect)
+
+            x = x - 1;
+            LineUtil.DrawLine(cX-x, cY+ y, cX+ x, cY+ y, 0, insideColor);
+            LineUtil.DrawLine(cX-x, cY- y, cX+ x, cY- y, 0, insideColor);
+        }
+    }
+
+    static void markPoint(ArrayList<Integer>[] points, int y, int x){
+        if(y > 0 && y < points.length){
+            if(points[y] == null)
+                points[y] = new ArrayList<>();
+            points[y].add(x);
+        }
+    }
+
+    static void Plot4EllipsePoints(int x, int y, int cX, int cY, int color)
     {
-        canvas.PaintOutline(cX + x, cY + y, color, rect);
-        canvas.PaintOutline(cX - x, cY + y, color, rect);
-        canvas.PaintOutline(cX - x, cY - y, color, rect);
-        canvas.PaintOutline(cX + x, cY - y, color, rect);
+        canvas.PaintOutline(cX + x, cY + y, color);
+        canvas.PaintOutline(cX - x, cY + y, color);
+        canvas.PaintOutline(cX - x, cY - y, color);
+        canvas.PaintOutline(cX + x, cY - y, color);
     }
 }

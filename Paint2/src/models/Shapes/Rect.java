@@ -2,7 +2,6 @@ package models.Shapes;
 
 import models.Maps.PointerPointMap;
 import models.Points.Point;
-import models.Maps.BaseMap;
 import models.Points.PointPointer;
 
 import java.awt.*;
@@ -26,38 +25,24 @@ public abstract class Rect{
         Draw();
     }
 
-    int outlineColor;
-    int fillColor;
+    public int outlineColor;
+    public int fillColor;
     boolean drawFilled;
-    int width;
+    public int width;
 
-    public Rect(Point a, Point b, int space, Color lineColor){
+    public Rect(Point a, Point b){
         minPoint = a;
         maxPoint = b;
-        dotSpace = space;
-        outlineColor = lineColor.getRGB();
-        drawFilled = true;
-        fillColor = Color.green.getRGB();
-        width = 5;
     }
 
     public abstract void UpdateSecondPoint(Point b);
 
-    final public void Draw(){
-        Outline();
-        if(drawFilled)
-            Fill();
-    }
+    abstract public void Draw();
 
-    abstract void Outline();
-
-    abstract void Fill();
-
-    public boolean Finish(PointerPointMap map, int gap) {
+    public boolean Finish(PointerPointMap map) {
         if(!AddToMap(map)){
             return false;
         }
-        SetDotSpace(gap);
         finished = true;
         return true;
     }
@@ -79,5 +64,10 @@ public abstract class Rect{
             }
         }
         return false;
+    }
+
+    public void Move(Point diff) {
+        minPoint.MoveBy(diff);
+        maxPoint.MoveBy(diff);
     }
 }

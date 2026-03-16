@@ -1,6 +1,5 @@
 package models.Shapes;
 
-import models.Maps.BaseMap;
 import models.Maps.PointerPointMap;
 import models.Points.Point;
 import models.Points.PointPointer;
@@ -8,12 +7,10 @@ import rasterizers.LineUtil;
 import rasterizers.PixelUtil;
 import rasterizers.PointUtil;
 
-import java.awt.*;
-
 public class Rectangle extends Polygon{
 
-    public Rectangle(Point a, int space, Color lineColor) {
-        super(a, space, lineColor);
+    public Rectangle(Point a) {
+        super(a);
         AddPoint(a.clone());
         AddPoint(a.clone());
         AddPoint(a.clone());
@@ -32,10 +29,10 @@ public class Rectangle extends Polygon{
     @Override
     void Outline() {
         for (int i = 0; i < points.size() - 1; i++) {
-            LineUtil.DrawLine(points.get(i), points.get(i + 1), dotSpace, width, outlineColor, this);
+            LineUtil.DrawLine(points.get(i), points.get(i + 1), dotSpace, width, outlineColor);
             PointUtil.DrawPoint(points.get(i),  outlineColor);
         }
-        LineUtil.DrawLine(points.getFirst(), points.getLast(), dotSpace, width, outlineColor, this);
+        LineUtil.DrawLine(points.getFirst(), points.getLast(), dotSpace, width, outlineColor);
         PointUtil.DrawPoint(points.getLast(), outlineColor);
     }
 

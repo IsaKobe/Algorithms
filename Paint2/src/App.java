@@ -6,7 +6,7 @@ import Window.DefaultWindow;
 
 public class App {
     public static void main(String[] args) {
-        SwingUtilities.invokeLater(() -> new App(800, 600).start());
+        SwingUtilities.invokeLater(() -> new App(1000, 600).start());
     }
 
 
