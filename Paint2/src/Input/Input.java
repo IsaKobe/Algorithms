@@ -127,6 +127,7 @@ public class Input {
                 else{
                     ((Polygon) rect).AddPoint(b);
                     a.copy(b);
+                    actions.repaint();
                 }
                 break;
         }
